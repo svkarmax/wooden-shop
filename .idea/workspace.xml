@@ -5,11 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="dc780e94-be3f-49cb-8089-931c856dce26" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/api/src/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/apps/api/src/server.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/web/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/web/src/pages/Home.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/pages/Home.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/apps/web/src/pages/ProductDetail.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/apps/web/src/pages/ProductDetail.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/vercel.json" beforeDir="false" afterPath="$PROJECT_DIR$/vercel.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
