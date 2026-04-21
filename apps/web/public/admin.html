@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Kalaakriti Woods</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f5efe7; }
+        .navbar { background: #5c3d2e; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        .card { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h2, h3 { color: #5c3d2e; margin-bottom: 15px; }
+        input, textarea, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; }
+        textarea { min-height: 80px; }
+        button { background: #5c3d2e; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .delete-btn { background: #f44336; margin-left: 10px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        .login-box { max-width: 400px; margin: 100px auto; background: white; padding: 30px; border-radius: 12px; }
+        .image-preview { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; margin-top: 10px; }
+        .upload-area { border: 2px dashed #ddd; padding: 20px; text-align: center; border-radius: 8px; cursor: pointer; margin: 10px 0; }
+        .upload-area:hover { border-color: #5c3d2e; }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div id="loginScreen" class="login-box">
+        <h2>🔐 Admin Login</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+        <p id="loginError" style="color:red; margin-top:10px"></p>
+    </div>
+
+    <div id="dashboard" style="display:none">
+        <div class="navbar">
+            <h2>🪵 Kalaakriti Woods - Admin</h2>
+            <button onclick="logout()">Logout</button>
+        </div>
+        <div class="container">
+            <div class="card">
+                <h3>➕ Add New Product</h3>
+                <input type="text" id="name" placeholder="Product Name">
+                <textarea id="desc" placeholder="Description"></textarea>
+                <input type="number" id="price" placeholder="Price (₹)">
+                <input type="text" id="dimensions" placeholder="Dimensions (e.g., 24x18x36 inches)">
+                <input type="text" id="woodType" placeholder="Wood Type">
+                <select id="category">
+                    <option>Temple</option>
+                    <option>Idol</option>
+                    <option>Pooja Accessories</option>
+                    <option>Custom</option>
+                </select>
+
+                <div class="upload-area" onclick="document.getElementById('imageInput').click()">
+                    📸 Click to upload product image
+                </div>
+                <input type="file" id="imageInput" style="display:none" accept="image/*" onchange="uploadImage()">
+                <div id="imagePreview"></div>
+                <input type="hidden" id="imageUrl">
+
+                <button onclick="createProduct()" style="margin-top: 15px;">💾 Save Product</button>
+                <p id="formMsg" style="margin-top: 10px;"></p>
+            </div>
+
+            <div class="card">
+                <h3>📦 Products</h3>
+                <div id="productsList">Loading...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API = `${window.location.origin}/api`;
+    let token = localStorage.getItem('token');
+    if (token) showDashboard();
+
+    async function login() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        try {
+            const res = await fetch(`${API}/admin/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                localStorage.setItem('token', data.token);
+                token = data.token;
+                showDashboard();
+            } else {
+                document.getElementById('loginError').innerText = 'Invalid credentials';
+            }
+        } catch (e) {
+            document.getElementById('loginError').innerText = 'Server error';
+        }
+    }
+
+    function showDashboard() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        loadProducts();
+    }
+
+    function logout() {
+        localStorage.removeItem('token');
+        location.reload();
+    }
+
+    async function uploadImage() {
+        const file = document.getElementById('imageInput').files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        document.getElementById('formMsg').innerHTML = '⏳ Uploading...';
+
+        try {
+            const res = await fetch(`${API}/admin/upload`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            const data = await res.json();
+            if (res.ok) {
+                document.getElementById('imageUrl').value = data.url;
+                document.getElementById('imagePreview').innerHTML = `<img src="${data.url}" class="image-preview"><p style="font-size:12px; color:green;">✅ Image uploaded!</p>`;
+                document.getElementById('formMsg').innerHTML = '';
+            } else {
+                document.getElementById('formMsg').innerHTML = '❌ Upload failed';
+            }
+        } catch (e) {
+            document.getElementById('formMsg').innerHTML = '❌ Upload error';
+        }
+    }
+
+    async function loadProducts() {
+        const res = await fetch(`${API}/products`);
+        const products = await res.json();
+        if (products.length === 0) {
+            document.getElementById('productsList').innerHTML = '<p>No products yet. Add your first product!</p>';
+            return;
+        }
+        let html = '<table><tr><th>Image</th><th>Name</th><th>Price</th><th>Category</th><th>Actions</th></tr>';
+        products.forEach(p => {
+            html += `<tr>
+                <td><img src="${p.mainImage || 'https://via.placeholder.com/50'}" width="50" height="50" style="object-fit:cover; border-radius:8px"></td>
+                <td>${p.name}</td>
+                <td>₹${p.price}</td>
+                <td>${p.category}</td>
+                <td><button onclick="deleteProduct('${p._id}')" class="delete-btn">Delete</button></td>
+            </tr>`;
+        });
+        html += '</table>';
+        document.getElementById('productsList').innerHTML = html;
+    }
+
+    async function createProduct() {
+        const name = document.getElementById('name').value;
+        if (!name) {
+            document.getElementById('formMsg').innerHTML = '❌ Product name required';
+            return;
+        }
+
+        const product = {
+            name: name,
+            slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+            description: document.getElementById('desc').value,
+            price: parseInt(document.getElementById('price').value),
+            dimensions: document.getElementById('dimensions').value,
+            woodType: document.getElementById('woodType').value,
+            category: document.getElementById('category').value,
+            images: [document.getElementById('imageUrl').value],
+            mainImage: document.getElementById('imageUrl').value,
+            inStock: true
+        };
+
+        try {
+            const res = await fetch(`${API}/admin/products`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(product)
+            });
+            if (res.ok) {
+                document.getElementById('formMsg').innerHTML = '✅ Product added successfully!';
+                document.getElementById('name').value = '';
+                document.getElementById('desc').value = '';
+                document.getElementById('price').value = '';
+                document.getElementById('dimensions').value = '';
+                document.getElementById('woodType').value = '';
+                document.getElementById('imageUrl').value = '';
+                document.getElementById('imagePreview').innerHTML = '';
+                document.getElementById('imageInput').value = '';
+                loadProducts();
+                setTimeout(() => document.getElementById('formMsg').innerHTML = '', 3000);
+            } else {
+                document.getElementById('formMsg').innerHTML = '❌ Failed to add product';
+            }
+        } catch (e) {
+            document.getElementById('formMsg').innerHTML = '❌ Error';
+        }
+    }
+
+    async function deleteProduct(id) {
+        if (!confirm('Delete this product?')) return;
+        await fetch(`${API}/admin/products/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        loadProducts();
+    }
+</script>
+</body>
+</html>

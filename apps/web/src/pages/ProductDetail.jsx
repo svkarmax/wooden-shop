@@ -11,7 +11,7 @@ const ProductDetail = () => {
   const phoneNumber = import.meta.env.VITE_OWNER_PHONE;
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/products/slug/${slug}`)
+    fetch(`/api/products/slug/${slug}`)
       .then(res => res.json())
       .then(data => {
         setProduct(data);

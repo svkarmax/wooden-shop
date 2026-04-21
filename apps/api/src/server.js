@@ -172,6 +172,10 @@ app.delete('/api/admin/products/:id', authenticateToken, async (req, res) => {
   res.json({ message: 'Deleted' });
 });
 
-app.listen(5000, () => {
-  console.log('🚀 Server running on http://localhost:5000');
-});
+if (!process.env.VERCEL) {
+  app.listen(5000, () => {
+    console.log('🚀 Server running on http://localhost:5000');
+  });
+}
+
+export default app;
